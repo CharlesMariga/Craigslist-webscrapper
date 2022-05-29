@@ -34,17 +34,22 @@ const scrapeJobHeader = async () => {
 const scrapeDescription = async (jobsWithHeaders) => {
   return await Promise.all(
     jobsWithHeaders.map(async (job) => {
-      const htmlResult = await request({ ...options, url: job.url });
-      const $ = await cheerio.load(htmlResult);
-      $(".print-information").remove();
-      const description = $("#postingbody").text();
-      const mapBox = $(".viewposting");
-      const address = [
-        mapBox.attr("data-latitude"),
-        mapBox.attr("data-longitude"),
-      ];
-      job.description = description;
-      job.address = address;
+      try {
+        const htmlResult = await request({ ...options, url: job.url });
+        const $ = await cheerio.load(htmlResult);
+        $(".print-information").remove();
+        const description = $("#postingbody").text();
+        const mapBox = $(".viewposting");
+        const address = [
+          mapBox.attr("data-latitude"),
+          mapBox.attr("data-longitude"),
+        ];
+        const compensation = $(".attrgroup").text();
+
+        return { ...job, description, address, compensation };
+      } catch (err) {
+        console.log(err.message);
+      }
     })
   );
 };
