@@ -1,4 +1,6 @@
-const request = require("request-promise");
+const fs = require("fs");
+
+const request = require("requestretry").defaults({ fullResponse: false });
 const cheerio = require("cheerio");
 
 const options = {
@@ -44,7 +46,11 @@ const scrapeDescription = async (jobsWithHeaders) => {
           mapBox.attr("data-latitude"),
           mapBox.attr("data-longitude"),
         ];
-        const compensation = $(".attrgroup").text();
+        const compensation = $(".attrgroup")
+          .children()
+          .first()
+          .text()
+          .replace("compensation: ", "");
 
         return { ...job, description, address, compensation };
       } catch (err) {
@@ -57,7 +63,10 @@ const scrapeDescription = async (jobsWithHeaders) => {
 const scrapeCraigsList = async () => {
   const jobsWithHeaders = await scrapeJobHeader();
   const jobsFullData = await scrapeDescription(jobsWithHeaders);
-  console.log(jobsFullData);
+  await fs.writeFile("./data.json", JSON.stringify(jobsFullData), (err) => {
+    if (err) return console.log(err.message);
+    console.log("Data written to file!");
+  });
 };
 
 scrapeCraigsList();
